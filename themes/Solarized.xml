@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<frescobaldi-theme name="Solarized">
+  <!--
+  Created by Frescobaldi 2.18.2.
+-->
+  <font fontFamily="Consolas" fontSize="10.0" />
+  <baseColors>
+    <selectiontext color="#586e75" />
+    <text color="#657b83" />
+    <musichighlight color="#268bd2" />
+    <search color="#eee8d5" />
+    <mark color="#c0c0ff" />
+    <current color="#fffc95" />
+    <selectionbackground color="#eee8d5" />
+    <paper color="#fdf6e3" />
+    <background color="#fdf6e3" />
+    <error color="#ffc0c0" />
+    <match color="#71c4ed" />
+  </baseColors>
+  <defaultStyles>
+    <function bold="True" italic="False" textColor="#b58900" underline="False" />
+    <comment bold="False" italic="True" textColor="#93a1a1" underline="False" />
+    <string bold="False" italic="False" textColor="#d33682" underline="False" />
+    <keyword bold="True" italic="False" textColor="#586e75" underline="False" />
+    <escape bold="False" italic="False" textColor="#859900" underline="False" />
+    <value bold="False" italic="False" textColor="#71c4ed" underline="False" />
+    <error bold="False" italic="False" textColor="#dc322f" underline="True" underlineColor="#ff0000" />
+    <variable bold="False" italic="False" textColor="#268bd2" underline="False" />
+  </defaultStyles>
+  <allStyles>
+    <lilypond>
+      <dynamic bold="True" italic="False" textColor="#ff4b16" underline="False" />
+      <fingering bold="False" italic="False" textColor="#ff4b16" underline="False" />
+      <duration textColor="#008080" />
+      <lyricmode textColor="#2aa198" />
+      <grob bold="False" italic="False" textColor="#d33682" underline="False" />
+      <lyrictext bold="False" italic="False" textColor="#2aa198" underline="False" />
+      <articulation bold="True" italic="False" textColor="#ff4b16" underline="False" />
+      <slur bold="True" />
+      <stringnumber bold="False" italic="False" textColor="#ff4b16" underline="False" />
+      <markup bold="False" textColor="#859900" />
+      <context bold="True" />
+    </lilypond>
+  </allStyles>
+</frescobaldi-theme>
