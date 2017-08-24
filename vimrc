@@ -42,6 +42,9 @@ Plug 'tpope/vim-vinegar'
 Plug 'easymotion/vim-easymotion'
 "Git
 Plug 'tpope/vim-fugitive'
+"Languages
+Plug 'lervag/vimtex'
+
 
 call plug#end()
 " End Plugin Settings ----}}}
@@ -113,6 +116,9 @@ nnoremap <leader><Space> :nohlsearch<cr>
 " Remap escape key.
 inoremap fd <Esc>
 
+" Fix behavior of Y so it matches C and D
+nnoremap Y y$
+
 " Formatting
 noremap <leader>q gqip
 
@@ -144,6 +150,49 @@ let g:UltiSnipsSnippetsDir="~/.vim/mysnippets"
 " DelimitMate Config
 let delimitMate_expand_cr=2
 
+" Tab autocomplete (bashlike)
+set wildmode=longest,list
+
+" Latex autocompletion and viewing
+if !exists('g:ycm_semantic_triggers')
+    let g:ycm_semantic_triggers = {}
+endif
+let g:ycm_semantic_triggers.tex = [
+    \ 're!\\[A-Za-z]*cite[A-Za-z]*(\[[^]]*\]){0,2}{[^}]*',
+    \ 're!\\[A-Za-z]*ref({[^}]*|range{([^,{}]*(}{)?))',
+    \ 're!\\hyperref\[[^]]*',
+    \ 're!\\includegraphics\*?(\[[^]]*\]){0,2}{[^}]*',
+    \ 're!\\(include(only)?|input){[^}]*',
+    \ 're!\\\a*(gls|Gls|GLS)(pl)?\a*(\s*\[[^]]*\]){0,2}\s*\{[^}]*',
+    \ 're!\\includepdf(\s*\[[^]]*\])?\s*\{[^}]*',
+    \ 're!\\includestandalone(\s*\[[^]]*\])?\s*\{[^}]*',
+    \ ]
+
+let g:vimtex_view_general_viewer = '/Applications/Skim.app/Contents/SharedSupport/displayline'
+let g:vimtex_view_general_options = '-r @line @pdf @tex'
+
+" This adds a callback hook that updates Skim after compilation
+let g:vimtex_latexmk_callback_hooks = ['UpdateSkim']
+function! UpdateSkim(status)
+  if !a:status | return | endif
+
+  let l:out = b:vimtex.out()
+  let l:tex = expand('%:p')
+  let l:cmd = [g:vimtex_view_general_viewer, '-r']
+  if !empty(system('pgrep Skim'))
+    call extend(l:cmd, ['-g'])
+  endif
+  if has('nvim')
+    call jobstart(l:cmd + [line('.'), l:out, l:tex])
+  elseif has('job')
+    call job_start(l:cmd + [line('.'), l:out, l:tex])
+  else
+    call system(join(l:cmd + [line('.'), shellescape(l:out), shellescape(l:tex)], ' '))
+  endif
+endfunction
+
+" Prevent .tex files from being treated as plain text
+let g:tex_flavor = 'latex'
 " }}} Completion and snippets "
 
 " Miscellaneous {{{ "
@@ -165,6 +214,9 @@ set visualbell
 
 " Encoding
 set encoding=utf-8
+
+" Use mouse to resize buffers
+set mouse=a
 
 " Turn on syntax highlighting
 syntax on
@@ -219,8 +271,6 @@ set clipboard=unnamed
 " Swap files are annoying
 set noswapfile
 
-"Tab autocomplete (bashlike)
-set wildmode=longest,list
 " }}} Miscellaneous "
 
 
