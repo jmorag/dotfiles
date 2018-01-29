@@ -1,5 +1,5 @@
 "---------------------------------
-" Big rewrite of vimrc
+" Big rewrite of vimrc fix easymotion
 "---------------------------------
 
 " Plugin settings ----{{{
@@ -27,8 +27,9 @@ Plug 'Valloric/YouCompleteMe', {'do': './install.py -all'}
 Plug 'rdnetto/YCM-Generator'
 "Easier text editing
 Plug 'Raimondi/delimitMate'
-Plug 'tomtom/tcomment_vim'
+Plug 'tpope/vim-commentary'
 Plug 'tpope/vim-surround'
+Plug 'junegunn/vim-easy-align'
 "Snippets
 Plug 'SirVer/ultisnips'
 Plug 'honza/vim-snippets'
@@ -37,14 +38,19 @@ Plug 'altercation/vim-colors-solarized'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 "File Navigation
-Plug 'ctrlpvim/ctrlp.vim'
-Plug 'tpope/vim-vinegar'
+" Plug 'ctrlpvim/ctrlp.vim'
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' } 
+Plug 'junegunn/fzf.vim'
+Plug 'scrooloose/nerdtree'
+" Plug 'tpope/vim-vinegar'
 Plug 'easymotion/vim-easymotion'
+Plug 'haya14busa/incsearch.vim'
+Plug 'haya14busa/incsearch-easymotion.vim'
 "Git
 Plug 'tpope/vim-fugitive'
 "Languages
 Plug 'lervag/vimtex'
-
+Plug 'w0rp/ale'
 
 call plug#end()
 " End Plugin Settings ----}}}
@@ -53,7 +59,6 @@ call plug#end()
 augroup filetype_vim
     autocmd!
     autocmd FileType vim setlocal foldmethod=marker
-    autocmd BufWritePost vimrc source %
 augroup END
 
 augroup filetype_config
@@ -69,7 +74,7 @@ augroup END
 
 " }}}
 
-" Key mappings {{{ "
+" Misc Key mappings {{{ " 
 
 let mapleader = "\<Space>"
 nnoremap ; :
@@ -80,27 +85,70 @@ vnoremap : ;
 "Since comma isn't the leader, use it to save
 nnoremap , :wall<CR>
 
-" EasyMotion only press leader once
-map <Leader> <Plug>(easymotion-prefix)
-" <Leader>f{char} to move to {char}
-noremap  <Leader>f <Plug>(easymotion-bd-f)
-nnoremap <Leader>f <Plug>(easymotion-overwin-f)
-
-" s{char}{char} to move to {char}{char}
-nnoremap s <Plug>(easymotion-overwin-f2)
-
-" Move to line
-noremap <Leader>l <Plug>(easymotion-bd-jk)
-nnoremap <Leader>l <Plug>(easymotion-overwin-line)
-
-" Move to word
-noremap  <Leader>w <Plug>(easymotion-bd-w)
-nnoremap <Leader>w <Plug>(easymotion-overwin-w)
+" Toggle comment with single key
+nmap ' <Plug>CommentaryLine
+nmap " gcap
+vmap ' <Plug>Commentary
 
 " Ycmd Fixit
 nnoremap <Leader>h :YcmCompleter FixIt<CR>
 
-" Move up/down editor lines
+" Remap escape key.
+inoremap fd <Esc>
+
+" Fix behavior of Y so it matches C and D
+nnoremap Y y$
+
+" Formatting
+nmap = <Plug>(EasyAlign)
+vmap = <Plug>(EasyAlign)
+
+" Access git
+nnoremap <Leader>g :Gstatus<CR>
+
+" Weird python thing I don't understand
+nnoremap <buffer> <C-B> :exec ':w !python' shellescape(@%, 1)<cr>
+
+" }}} Key mappings "
+
+" Navigation {{{
+
+" Easymotion config
+let g:EasyMotion_smartcase = 1
+let g:EasyMotion_use_smartsign_us = 1 " 1 matches !, etc.
+nmap f <Plug>(easymotion-sl)
+
+" Let's take a stab at using timer to emulate avy-go-to-char-timer
+" TODO: this is horribly hacky and there must be a better way to accomplish
+" this
+function! PressEnter(timer)
+    :call feedkeys("\<CR>")
+endfunction
+" garbage mapping - can't figure out how to just call (easymotion-sn)
+nmap <c-_> <Plug>(easymotion-sn)
+function! GoToCharTimer()
+    :call feedkeys("\<c-_>")
+    let timer=timer_start(2500, 'PressEnter')
+    :set nohlsearch
+endfunction    
+
+" Now <c-f> behaves like avy-go-to-char-timer
+nnoremap <c-f> :call GoToCharTimer()<CR>
+omap <c-f> <Plug>(easymotion-tn)
+
+" Incsearch 
+map /  <Plug>(incsearch-forward)
+map ?  <Plug>(incsearch-backward)
+set hlsearch
+let g:incsearch#auto_nohlsearch = 1
+map n  <Plug>(incsearch-nohl-n)
+map N  <Plug>(incsearch-nohl-N)
+map *  <Plug>(incsearch-nohl-*)
+map #  <Plug>(incsearch-nohl-#)
+map g* <Plug>(incsearch-nohl-g*)
+map g# <Plug>(incsearch-nohl-g#)
+
+" Move up/down visual lines
 nnoremap j gj
 nnoremap k gk
 
@@ -110,22 +158,31 @@ nnoremap <c-k> <c-w>k
 nnoremap <c-h> <c-w>h
 nnoremap <c-l> <c-w>l
 
-" Clear search
-nnoremap <leader><Space> :nohlsearch<cr>
+" Open NerdTree
+nnoremap - :NERDTreeToggle<CR>
 
-" Remap escape key.
-inoremap fd <Esc>
+" Close vim if all that's left open in NERDTree
+augroup nerd_tree
+    autocmd!
+    autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+augroup END
 
-" Fix behavior of Y so it matches C and D
-nnoremap Y y$
+" Fuzzy file finding
+nnoremap <c-p> :Files<CR>
+set grepprg=rg\ --vimgrep
 
-" Formatting
-noremap <leader>q gqip
+" Fuzzy term finding in project with fzf 
+" https://medium.com/@crashybang/supercharge-vim-with-fzf-and-ripgrep-d4661fc853d2
+command! -bang -nargs=* Find call fzf#vim#grep('rg --column 
+ \ --line-number --no-heading 
+ \ --fixed-strings --ignore-case 
+ \ --follow --glob "!.git/*" 
+ \ --color "always" '.shellescape(<q-args>), 1, <bang>0)
+ " \ --no-ignore --hidden 
 
-" Weird python thing I don't understand
-nnoremap <buffer> <C-B> :exec ':w !python' shellescape(@%, 1)<cr>
+nnoremap s :Find<CR>
+" }}}
 
-" }}} Key mappings "
 
 " Completion and snippets {{{ "
 
@@ -139,7 +196,10 @@ let g:ycm_extra_conf_globlist = ['~/*']
 let g:ycm_global_ycm_extra_conf = '~/.vim/ycm_extra_conf.py'
 
 " Remap ultisnips to <C-j> so <Tab> isn't overloaded
-let g:UltiSnipsExpandTrigger="<C-j>"
+" let g:UltiSnipsExpandTrigger="<C-j>"
+let g:ycm_key_list_select_completion=['<C-j>']
+" previous completion select buggy
+" let g:ycm_key_list_select_previous_completion=["<C-k>"]
 
 " Let Ultisnips split window
 let g:UltiSnipsEditSplit="vertical"
@@ -193,6 +253,11 @@ endfunction
 
 " Prevent .tex files from being treated as plain text
 let g:tex_flavor = 'latex'
+
+" Ocaml merlin
+let g:opamshare = substitute(system('opam config var share'),'\n$','','''')
+execute "set rtp+=" . g:opamshare . "/merlin/vim"
+
 " }}} Completion and snippets "
 
 " Miscellaneous {{{ "
@@ -272,5 +337,4 @@ set clipboard=unnamed
 set noswapfile
 
 " }}} Miscellaneous "
-
 
